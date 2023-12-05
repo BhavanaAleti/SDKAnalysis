@@ -58,7 +58,7 @@
                 <archive>  
                     <manifest>  
                         <addClasspath>true</addClasspath>
-                        <mainClass>com.cns.sdkanalysis.App</mainClass>
+                        <mainClass>com.cns.sdkanalysis.Application</mainClass>
                     </manifest>  
                 </archive>  
             </configuration> 
