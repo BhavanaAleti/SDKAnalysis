@@ -11,12 +11,21 @@ import com.cns.grammar.GoParser;
 
 import java.io.IOException;
 
+/**
+ * Class for analyzing Golang SDK source code using ANTLR for parsing.
+ */
 public class AnalyseGolangSDKSourceCode extends AnalyseSDKSourceCode {
+    // The parse tree representing the abstract syntax tree (AST) of the Golang source code.
     ParseTree parseTree;
 
-    public AnalyseGolangSDKSourceCode(String filePath) {
+    /**
+     * Constructor that initializes the Golang SDK source code analysis by creating a parse tree.
+     *
+     * @param sourceCodeFilesPath The path to the Golang source code file.
+     */
+    public AnalyseGolangSDKSourceCode(String sourceCodeFilesPath) {
         try {
-            CharStream inputStream = CharStreams.fromFileName(filePath);
+            CharStream inputStream = CharStreams.fromFileName(sourceCodeFilesPath);
             GoLexer goLexer = new GoLexer(inputStream);
             CommonTokenStream commonTokenStream = new CommonTokenStream(goLexer);
             GoParser goParser = new GoParser(commonTokenStream);
@@ -24,26 +33,28 @@ public class AnalyseGolangSDKSourceCode extends AnalyseSDKSourceCode {
             // Prepare parse tree or AST (Abstract Syntax Tree)
             parseTree = goParser.sourceFile();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
 
-    public void Analyse() {
+    /**
+     * Analyzes the Golang SDK source code by walking the parse tree and performing checks using a listener.
+     */
+    public void analyseSDKSourceCode() {
         // Register listener class which will perform checks.
-        GoLangListener listener = new GoLangListener();
+        GoLangSDKAnalysisListener listener = new GoLangSDKAnalysisListener();
         ParseTreeWalker walker = new ParseTreeWalker();
 
         // Walk method will walk through all tokens & call appropriate listener methods
         // where we will perform checks.
         walker.walk(listener, parseTree);
 
-        this.totalCriticalFields += listener.totalCriticalFields;
-        this.totalCriticalMethods += listener.totalCriticalMethods;
-        this.totalCriticalVars += listener.totalCriticalVars;
+        this.unsafeCriticalFields += listener.totalUnSafeCriticalFields;
+        this.unsafeCriticalMethods += listener.totalUnSafeCriticalMethods;
+        this.unsafeCriticalVariables += listener.totalUnSafeCriticalVariables;
 
-        this.totalSafeCriticalFields += listener.totalSafeCriticalFields;
-        this.totalSafeCriticalMethods += listener.totalSafeCriticalMethods;
-        this.totalSafeCriticalVars += listener.totalSafeCriticalVars;
+        this.safeCriticalFields += listener.totalSafeCriticalFields;
+        this.safeCriticalMethods += listener.totalSafeCriticalMethods;
+        this.safeCriticalVariables += listener.totalSafeCriticalVariables;
     }
 }

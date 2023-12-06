@@ -11,16 +11,26 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import com.cns.grammar.GoParser;
 import com.cns.grammar.GoParserBaseListener;
 
-public class GoLangListener extends GoParserBaseListener {
+public class GoLangSDKAnalysisListener extends GoParserBaseListener {
 
-    long totalCriticalVars = 0;
-    long totalCriticalFields = 0;
-    long totalCriticalMethods = 0;
+    long totalUnSafeCriticalVariables = 0;
+    long totalUnSafeCriticalFields = 0;
+    long totalUnSafeCriticalMethods = 0;
 
-    long totalSafeCriticalVars = 0;
+    long totalSafeCriticalVariables = 0;
     long totalSafeCriticalFields = 0;
     long totalSafeCriticalMethods = 0;
 
+    private static final String regexForCriticalVariable = "(?:pass|key|crypt|imei|username|identifier|secret|token|auth)" ;
+
+    private static final String regexForIsSafeType = "(?:char|StringBuilder)";
+
+    private static final String STRING = "String";
+
+
+    /**
+     * Analyzes function declarations in the Go source code for critical and safe variables in return parameters and types.
+     */
     @Override
     public void enterFunctionDecl(GoParser.FunctionDeclContext ctx) {
         if (ctx.signature().result() == null) {
@@ -33,12 +43,12 @@ public class GoLangListener extends GoParserBaseListener {
         if (ctx.signature().result().parameters() != null) {
             List<GoParser.ParameterDeclContext> paramsStrings = ctx.signature().result().parameters().parameterDecl()
                     .stream()
-                    .filter(p -> p.type_().getText().equals("string"))
+                    .filter(p -> p.type_().getText().equals("String"))
                     .collect(Collectors.toList());
 
             if (paramsStrings.size() > 0) {
                 System.out.println("<Method Return Params> " + ctx.IDENTIFIER().getText());
-                totalCriticalMethods += paramsStrings.size();
+                totalUnSafeCriticalMethods += paramsStrings.size();
             }
 
             paramsStrings = ctx.signature().result().parameters().parameterDecl()
@@ -54,9 +64,9 @@ public class GoLangListener extends GoParserBaseListener {
         }
 
         if (ctx.signature().result().type_() != null) {
-            if (ctx.signature().result().type_().getText().equals("string")) {
+            if (ctx.signature().result().type_().getText().equals("String")) {
                 System.out.println("<Method Return Type> " + ctx.IDENTIFIER().getText());
-                totalCriticalMethods++;
+                totalUnSafeCriticalMethods++;
             }
             if (isSafeType(ctx.signature().result().type_().getText())) {
                 System.out.println("<Safe Method Return Type> " + ctx.IDENTIFIER().getText());
@@ -66,6 +76,9 @@ public class GoLangListener extends GoParserBaseListener {
 
     }
 
+    /**
+     * Analyzes method declarations in the Go source code for critical and safe variables in return parameters and types.
+     */
     @Override
     public void enterMethodDecl(GoParser.MethodDeclContext ctx) {
         if (ctx.signature().result() == null) {
@@ -78,12 +91,12 @@ public class GoLangListener extends GoParserBaseListener {
         if (ctx.signature().result().parameters() != null) {
             List<GoParser.ParameterDeclContext> paramsStrings = ctx.signature().result().parameters().parameterDecl()
                     .stream()
-                    .filter(p -> p.type_().getText().equals("string"))
+                    .filter(p -> p.type_().getText().equals("String"))
                     .collect(Collectors.toList());
 
             if (paramsStrings.size() > 0) {
                 System.out.println("<Method Return Params> " + ctx.IDENTIFIER().getText());
-                totalCriticalMethods += paramsStrings.size();
+                totalUnSafeCriticalMethods += paramsStrings.size();
             }
 
             paramsStrings = ctx.signature().result().parameters().parameterDecl()
@@ -99,9 +112,9 @@ public class GoLangListener extends GoParserBaseListener {
         }
 
         if (ctx.signature().result().type_() != null) {
-            if (ctx.signature().result().type_().getText().equals("string")) {
+            if (ctx.signature().result().type_().getText().equals("String")) {
                 System.out.println("<Method Return Type> " + ctx.IDENTIFIER().getText());
-                totalCriticalMethods++;
+                totalUnSafeCriticalMethods++;
             }
             if (isSafeType(ctx.signature().result().type_().getText())) {
                 System.out.println("<Safe Method Return Type> " + ctx.IDENTIFIER().getText());
@@ -110,12 +123,15 @@ public class GoLangListener extends GoParserBaseListener {
         }
     }
 
+    /**
+     * Analyzes struct type declarations in the Go source code for critical and safe fields.
+     */
     @Override
     public void enterStructType(GoParser.StructTypeContext ctx) {
         List<List<TerminalNode>> identifiers = ctx.fieldDecl()
                 .stream()
                 .filter(var -> var.type_() != null)
-                .filter(f -> f.type_().getText().equals("string"))
+                .filter(f -> f.type_().getText().equals("String"))
                 .map(f -> f.identifierList().IDENTIFIER())
                 .collect(Collectors.toList());
 
@@ -131,7 +147,7 @@ public class GoLangListener extends GoParserBaseListener {
 
         if (criticalVars.size() > 0) {
             System.out.println("<Struct feild> " + criticalVars);
-            totalCriticalFields += criticalVars.size();
+            totalUnSafeCriticalFields += criticalVars.size();
         }
 
         identifiers = ctx.fieldDecl()
@@ -158,19 +174,12 @@ public class GoLangListener extends GoParserBaseListener {
 
     }
 
-    // @Override
-    // public void enterTypeSpec(GoParser.TypeSpecContext ctx) {
-    // if (ctx.type_().typeLit() != null
-    // && ctx.type_().typeLit().structType() != null
-    // && isCriticalVariable(ctx.IDENTIFIER().getText())) {
-    // System.out.println("Struct " + ctx.IDENTIFIER().getText());
-    // }
-
-    // }
-
+    /**
+     * Analyzes variable specifications in the Go source code for critical and safe variables.
+     */
     @Override
     public void enterVarSpec(GoParser.VarSpecContext ctx) {
-        if (ctx.type_() == null || ctx.type_().getText().equals("string")) {
+        if (ctx.type_() == null || ctx.type_().getText().equals("String")) {
             List<String> criticalVars = ctx.identifierList().IDENTIFIER().stream()
                     .filter(i -> isCriticalVariable(i.getText()))
                     .map(i -> i.getText())
@@ -178,7 +187,7 @@ public class GoLangListener extends GoParserBaseListener {
 
             if (criticalVars.size() > 0) {
                 System.out.println("<Var> " + criticalVars);
-                totalCriticalVars += criticalVars.size();
+                totalUnSafeCriticalVariables += criticalVars.size();
             }
         }
 
@@ -190,12 +199,18 @@ public class GoLangListener extends GoParserBaseListener {
 
             if (criticalVars.size() > 0) {
                 System.out.println("<Safe Var> " + criticalVars);
-                totalSafeCriticalVars += criticalVars.size();
+                totalSafeCriticalVariables += criticalVars.size();
             }
         }
 
     }
 
+    /**
+     * Checks if a variable is critical based on a predefined pattern.
+     *
+     * @param var The variable to check.
+     * @return True if the variable is critical, otherwise false.
+     */
     private boolean isCriticalVariable(String var) {
         // Strip non alpha chars
         Pattern pattern = Pattern
@@ -206,6 +221,12 @@ public class GoLangListener extends GoParserBaseListener {
         return matcher.find();
     }
 
+    /**
+     * Checks if a variable type is considered safe based on a predefined pattern.
+     *
+     * @param type The variable type to check.
+     * @return True if the variable type is safe, otherwise false.
+     */
     private boolean isSafeType(String type) {
         Pattern pattern = Pattern
                 .compile(

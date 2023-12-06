@@ -9,9 +9,9 @@ public class Application {
             return;
         }
 
-        SDKAnalyzer sdk = new SDKAnalyzer(args[0], "." + args[1]);
-        sdk.Analyse();
-        sdk.GetResult();
-        sdk.Output();
+        SDKAnalyzer sdkAnalyzer = new SDKAnalyzer(args[0], "." + args[1]);
+        sdkAnalyzer.validateSourceLangAndAnalyze();
+        sdkAnalyzer.aggregateAnalyzedMetrics();
+        sdkAnalyzer.exportAnalysisResultsToCSV();
     }
 }

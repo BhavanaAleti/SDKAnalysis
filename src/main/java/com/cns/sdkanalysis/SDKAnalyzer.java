@@ -4,90 +4,72 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class SDKAnalyzer {
 
+    String pathToSDKSourceCode;
+    String sourceCodeLanguage;
     ArrayList<File> files;
     ArrayList<AnalyseSDKSourceCode> sdkSourceCodes;
-    String fileExtension;
-    String pathToSDKSourceCode;
-
 
     long safeCriticalFields = 0;
     long safeCriticalVars = 0;
     long safeCriticalMethods = 0;
-
-
     long unsafeCriticalVariables = 0;
     long unsafeCriticalFields = 0;
     long unsafeCriticalMethods = 0;
 
 
-    public SDKAnalyzer(String pathToSDKSourceCode, String fileExtension) {
+    public SDKAnalyzer(String pathToSDKSourceCode, String sourceCodeLanguage) {
         this.pathToSDKSourceCode = pathToSDKSourceCode;
-        this.fileExtension = fileExtension;
+        this.sourceCodeLanguage = sourceCodeLanguage;
         files = new ArrayList<>();
         sdkSourceCodes = new ArrayList<>();
 
-        listFilesForFolder(new File(pathToSDKSourceCode));
+        collectSourceFilesRecursively(new File(pathToSDKSourceCode));
     }
 
     public ArrayList<File> getFiles() {
         return files;
     }
 
-    public void Analyse() {
-        switch (fileExtension) {
+    public void validateSourceLangAndAnalyze() {
+        switch (sourceCodeLanguage) {
             case ".java":
                 for (File file : files) {
-                    AnalyseJavaSDKSourceCode analyseFile = new AnalyseJavaSDKSourceCode(file.getPath());
-                    analyseFile.Analyse();
-                    sdkSourceCodes.add(analyseFile);
+                    AnalyseJavaSDKSourceCode analyseJavaSDKSourceCode = new AnalyseJavaSDKSourceCode(file.getPath());
+                    analyseJavaSDKSourceCode.analyseSDKSourceCode();
+                    sdkSourceCodes.add(analyseJavaSDKSourceCode);
                 }
                 break;
             case ".go":
                 for (File file : files) {
-                    AnalyseGolangSDKSourceCode analyseFile = new AnalyseGolangSDKSourceCode(file.getPath());
-                    analyseFile.Analyse();
-                    sdkSourceCodes.add(analyseFile);
+                    AnalyseGolangSDKSourceCode analyseGolangSDKSourceCode = new AnalyseGolangSDKSourceCode(file.getPath());
+                    analyseGolangSDKSourceCode.analyseSDKSourceCode();
+                    sdkSourceCodes.add(analyseGolangSDKSourceCode);
                 }
                 break;
             default:
-                System.out.println("Language not supported");
-
+                System.out.println("Language not supported,only Java and Go Source code files are supported.");
         }
 
     }
 
-    public void GetResult() {
-        for (AnalyseSDKSourceCode file : sdkSourceCodes) {
-            this.unsafeCriticalFields += file.totalCriticalFields;
-            this.unsafeCriticalMethods += file.totalCriticalMethods;
-            this.unsafeCriticalVariables += file.totalCriticalVars;
+    public void aggregateAnalyzedMetrics() {
+        for (AnalyseSDKSourceCode sourceCode : sdkSourceCodes) {
+            this.unsafeCriticalFields += sourceCode.unsafeCriticalFields;
+            this.unsafeCriticalMethods += sourceCode.unsafeCriticalMethods;
+            this.unsafeCriticalVariables += sourceCode.unsafeCriticalVariables;
 
-            this.safeCriticalFields += file.totalSafeCriticalFields;
-            this.safeCriticalMethods += file.totalSafeCriticalMethods;
-            this.safeCriticalVars += file.totalSafeCriticalVars;
+            this.safeCriticalFields += sourceCode.safeCriticalFields;
+            this.safeCriticalMethods += sourceCode.safeCriticalMethods;
+            this.safeCriticalVars += sourceCode.safeCriticalVariables;
         }
 
     }
 
-    private void listFilesForFolder(final File folder) {
-        for (final File fileEntry : folder.listFiles()) {
-            if (fileEntry.isDirectory()) {
-                listFilesForFolder(fileEntry);
-            } else if (isSourceFile(fileEntry)) {
-                files.add(fileEntry);
-                // System.out.println(fileEntry.getPath());
-            }
-        }
-    }
-
-    private boolean isSourceFile(File file) {
-        return file.getName().endsWith(fileExtension);
-    }
-
-    public void Output() {
+    public void exportAnalysisResultsToCSV() {
         String output = "Type, Count\n";
         output += "UnSafeCriticalVariables, " + this.unsafeCriticalVariables + "\n";
         output += "UnSafeCriticalFields, " + this.unsafeCriticalFields + "\n";
@@ -100,13 +82,29 @@ public class SDKAnalyzer {
         try {
             BufferedWriter writer = new BufferedWriter(
                     new FileWriter(
-                            fileExtension.substring(1) + "_output/"
+                            sourceCodeLanguage.substring(1) + "_output/"
                                     + pathToSDKSourceCode.substring(pathToSDKSourceCode.lastIndexOf("/") + 1) + ".csv"));
             writer.write(output);
             writer.close();
         } catch (Exception e) {
-            System.out.println(e.toString());
+            System.out.println(e);
         }
     }
+
+    private void collectSourceFilesRecursively(final File folder) {
+        for (final File fileEntry : Objects.requireNonNull(folder.listFiles())) {
+            if (fileEntry.isDirectory()) {
+                collectSourceFilesRecursively(fileEntry);
+            } else if (isSourceCodeFileWithExtension(fileEntry)) {
+                files.add(fileEntry);
+            }
+        }
+    }
+
+    private boolean isSourceCodeFileWithExtension(File file) {
+        return file.getName().endsWith(sourceCodeLanguage);
+    }
+
+
 
 }

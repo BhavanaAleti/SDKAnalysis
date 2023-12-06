@@ -1,7 +1,7 @@
 Type, Count
+UnSafeCriticalVariables, 51
 UnSafeCriticalFields, 53
 UnSafeCriticalMethods, 43
-UnSafeCriticalVars, 51
+SafeCriticalVariables, 1
 SafeCriticalFields, 0
 SafeCriticalMethods, 0
-SafeCriticalVars, 1

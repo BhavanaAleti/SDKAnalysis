@@ -8,23 +8,31 @@ import java.util.stream.Collectors;
 import com.cns.grammar.JavaParser;
 import com.cns.grammar.JavaParserBaseListener;
 
-public class JavaListener extends JavaParserBaseListener {
+public class JavaSDKAnalysisListener extends JavaParserBaseListener {
 
-    long totalCriticalVars = 0;
-    long totalCriticalFields = 0;
-    long totalCriticalMethods = 0;
-
-    long totalSafeCriticalVars = 0;
+    long totalSafeCriticalVariables = 0;
     long totalSafeCriticalFields = 0;
     long totalSafeCriticalMethods = 0;
+    long totalUnSafeCriticalVariables = 0;
+    long totalUnSafeCriticalFields = 0;
+    long totalUnSafeCriticalMethods = 0;
 
+    private static final String regexForCriticalVariable = "(?:pass|key|crypt|imei|username|identifier|secret|token|auth)" ;
+
+    private static final String regexForIsSafeType = "(?:char|StringBuilder)";
+
+    private static final String STRING = "String";
+
+    /**
+     * Analyzes method declarations in the Java source code for critical and safe variables in return types.
+     */
     @Override
     public void enterMethodDeclaration(JavaParser.MethodDeclarationContext ctx) {
         String returnType = ctx.typeTypeOrVoid().getText();
-        if (returnType.equals("String")) {
+        if (returnType.equals(STRING)) {
             if (isCriticalVariable(ctx.identifier().getText())) {
                 System.out.println("<Method> " + returnType + " " + ctx.identifier().getText());
-                totalCriticalMethods++;
+                totalUnSafeCriticalMethods++;
             }
         }
 
@@ -36,10 +44,13 @@ public class JavaListener extends JavaParserBaseListener {
         }
     }
 
+    /**
+     * Analyzes field declarations in the Java source code for critical and safe variables.
+     */
     @Override
     public void enterFieldDeclaration(JavaParser.FieldDeclarationContext ctx) {
         String fieldType = ctx.typeType().getText();
-        if (fieldType.equals("String")) {
+        if (fieldType.equals(STRING)) {
 
             List<String> list = ctx.variableDeclarators().variableDeclarator()
                     .stream()
@@ -48,7 +59,7 @@ public class JavaListener extends JavaParserBaseListener {
 
             if (list.size() > 0) {
                 System.out.println("<Field> " + fieldType + " " + list);
-                totalCriticalFields += list.size();
+                totalUnSafeCriticalFields += list.size();
             }
         }
 
@@ -65,10 +76,13 @@ public class JavaListener extends JavaParserBaseListener {
         }
     }
 
+    /**
+     * Analyzes local variable declarations in the Java source code for critical and safe variables.
+     */
     @Override
     public void enterLocalVariableDeclaration(JavaParser.LocalVariableDeclarationContext ctx) {
         String fieldType = ctx.typeType().getText();
-        if (fieldType.equals("String")) {
+        if (fieldType.equals(STRING)) {
 
             List<String> list = ctx.variableDeclarators().variableDeclarator()
                     .stream()
@@ -77,7 +91,7 @@ public class JavaListener extends JavaParserBaseListener {
 
             if (list.size() > 0) {
                 System.out.println("<Local Var> " + fieldType + " " + list);
-                totalCriticalVars += list.size();
+                totalUnSafeCriticalVariables += list.size();
             }
         }
 
@@ -89,22 +103,34 @@ public class JavaListener extends JavaParserBaseListener {
 
             if (list.size() > 0) {
                 System.out.println("<Safe Local Var>  " + fieldType + " " + list);
-                totalSafeCriticalVars += list.size();
+                totalSafeCriticalVariables += list.size();
             }
         }
     }
 
-    private boolean isCriticalVariable(String var) {
-        Pattern pattern = Pattern.compile("(?:pass|key|crypt|imei|username|identifier|secret|token|auth)",
+    /**
+     * Checks if a variable is critical based on a predefined pattern.
+     *
+     * @param variable The variable to check.
+     * @return True if the variable is critical, otherwise false.
+     */
+    private boolean isCriticalVariable(String variable) {
+        Pattern pattern = Pattern.compile(regexForCriticalVariable,
                 Pattern.CASE_INSENSITIVE);
-        Matcher matcher = pattern.matcher(var);
+        Matcher matcher = pattern.matcher(variable);
         return matcher.find();
     }
 
+    /**
+     * Checks if a variable type is considered safe based on a predefined pattern.
+     *
+     * @param type The variable type to check.
+     * @return True if the variable type is safe, otherwise false.
+     */
     private boolean isSafeType(String type) {
         Pattern pattern = Pattern
                 .compile(
-                        "(?:char|StringBuilder)",
+                        regexForIsSafeType,
                         Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(type);
         return matcher.find();
