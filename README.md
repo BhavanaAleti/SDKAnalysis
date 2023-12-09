@@ -27,9 +27,11 @@ analysis on source data, identifying potential issues such as security vulnerabi
 
 ## Results
 
-| Header 1 | Header 2 | Header 3 |
+| Type| Count |
 |----------|----------|----------|
-| Row 1, Col 1 | Row 1, Col 2 | Row 1, Col 3 |
-| Row 2, Col 1 | Row 2, Col 2 | Row 2, Col 3 |
-| Row 3, Col 1 | Row 3, Col 2 | Row 3, Col 3 |
-
+UnSafeCriticalVariables| 34
+UnSafeCriticalFields| 44
+UnSafeCriticalMethods| 25
+SafeCriticalVariables| 0
+SafeCriticalFields| 0
+SafeCriticalMethods| 0
