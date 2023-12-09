@@ -27,6 +27,8 @@ analysis on source data, identifying potential issues such as security vulnerabi
 
 ## Results
 
+Java results for Snow Flake
+
 | Type| Count |
 |----------|----------|
 UnSafeCriticalVariables| 34 |
@@ -35,3 +37,15 @@ UnSafeCriticalMethods| 25 |
 SafeCriticalVariables| 0 |
 SafeCriticalFields| 0 |
 SafeCriticalMethods| 0 |
+
+Go results for Snow Flake
+
+| Type| Count |
+|----------|----------|
+UnSafeCriticalVariables| 9 |
+UnSafeCriticalFields| 0 |
+UnSafeCriticalMethods| 0 |
+SafeCriticalVariables| 9 |
+SafeCriticalFields| 4 |
+SafeCriticalMethods| 4 |
+
