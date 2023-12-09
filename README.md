@@ -28,10 +28,10 @@ analysis on source data, identifying potential issues such as security vulnerabi
 ## Results
 
 | Type| Count |
-|----------|----------|----------|
-UnSafeCriticalVariables| 34
-UnSafeCriticalFields| 44
-UnSafeCriticalMethods| 25
-SafeCriticalVariables| 0
-SafeCriticalFields| 0
-SafeCriticalMethods| 0
+|----------|----------|
+UnSafeCriticalVariables| 34 |
+UnSafeCriticalFields| 44 |
+UnSafeCriticalMethods| 25 |
+SafeCriticalVariables| 0 |
+SafeCriticalFields| 0 |
+SafeCriticalMethods| 0 |
