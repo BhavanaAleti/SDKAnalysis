@@ -26,8 +26,9 @@ analysis on source data, identifying potential issues such as security vulnerabi
         java -jar target/sdkanalysis-1.0-SNAPSHOT.jar <Path To SDK> <Language of SDK>
 
 ## Results
+Below are the CSV results for one of the SDK we analyzed
 
-Java results for Snow Flake
+### Result for Snowflake SDK- Java :
 
 | Type| Count |
 |----------|----------|
@@ -38,7 +39,7 @@ SafeCriticalVariables| 0 |
 SafeCriticalFields| 0 |
 SafeCriticalMethods| 0 |
 
-Go results for Snow Flake
+### Result for Snowflake SDK -Go
 
 | Type| Count |
 |----------|----------|
