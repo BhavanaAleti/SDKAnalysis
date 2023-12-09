@@ -24,3 +24,13 @@ analysis on source data, identifying potential issues such as security vulnerabi
 
 2. To run the code, use the below command
         java -jar target/sdkanalysis-1.0-SNAPSHOT.jar <Path To SDK> <Language of SDK>
+
+## Results
+
+Type, Count
+UnSafeCriticalVariables, 34
+UnSafeCriticalFields, 44
+UnSafeCriticalMethods, 25
+SafeCriticalVariables, 0
+SafeCriticalFields, 0
+SafeCriticalMethods, 0
